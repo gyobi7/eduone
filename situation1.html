@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 책임감 활동 1: 추천 상품 이야기</title>
+    <style>
+        :root {
+            --color-primary: #2180 8D;
+            --color-secondary: #F5A844;
+            --color-bg: #FFF9F3;
+            --color-text: #1F2121;
+            --color-success: #32B8C6;
+            --color-warning: #E67F61;
+            --color-error: #C01530;
+            --radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stage {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .stage.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stage-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: var(--color-secondary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .scenario-box {
+            background: #F0F8FF;
+            border-left: 4px solid var(--color-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .scenario-visual {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .choice-section {
+            margin-top: 30px;
+        }
+
+        .question {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 15px;
+        }
+
+        .choices {
+            display: grid;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover {
+            background: #E67F61;
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .choice-btn:active {
+            transform: translateX(2px);
+        }
+
+        .choice-icon {
+            font-size: 24px;
+        }
+
+        .feedback {
+            background: #FFF3E0;
+            border-left: 4px solid var(--color-warning);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: var(--color-warning);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .feedback-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #1A6A8C;
+        }
+
+        .btn-next:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn-reset:hover {
+            background: rgba(33, 128, 141, 0.1);
+        }
+
+        .progress-bar {
+            background: #E0E0E0;
+            height: 6px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            height: 100%;
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+
+        .reflection-box {
+            background: #E8F5E9;
+            border-left: 4px solid var(--color-success);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .reflection-title {
+            font-weight: 600;
+            color: var(--color-success);
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .reflection-item {
+            font-size: 14px;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .reflection-item:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-success);
+            font-weight: bold;
+        }
+
+        .emoji {
+            display: inline-block;
+            margin: 0 4px;
+        }
+
+        footer {
+            background: #F5F5F5;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .scenario-visual {
+                min-height: 120px;
+                font-size: 48px;
+            }
+
+            .choice-btn {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 상황 1: AI 추천으로 잘못된 상품 구매</h1>
+            <p>미미의 이야기를 통해 AI 책임감을 배워봐요!</p>
+        </header>
+
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+
+            <!-- 1단계: 상황 설정 -->
+            <div class="stage active" id="stage1">
+                <div class="stage-title">
+                    <span class="stage-number">1</span>
+                    <span>쇼핑앱 접속</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">👧</span> <strong>미미</strong>는 평소 좋아하던 귀여운 인형을 다시 찾기 위해 쇼핑앱을 켰어요.
+                    </div>
+                    <div class="scenario-text">
+                        미미가 "귀여운 인형"이라고 검색하자, 앱의 AI가 과거에 본 상품들을 분석하고...
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    🛍️
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">다음은 어떻게 될까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(2)">
+                            <span class="choice-icon">✨</span>
+                            <span>AI가 추천 상품을 보여줘요</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단계: AI 추천 -->
+            <div class="stage" id="stage2">
+                <div class="stage-title">
+                    <span class="stage-number">2</span>
+                    <span>AI 추천 상품 발견</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">🤖</span> AI가 미미의 <strong>과거 구매 기록</strong>과 <strong>조회한 상품</strong>을 분석했어요.
+                    </div>
+                    <div class="scenario-text">
+                        그리고 이렇게 말했어요:
+                    </div>
+                    <div style="background: white; padding: 16px; border-radius: 8px; margin: 12px 0; border: 2px solid var(--color-primary); font-style: italic;">
+                        "미미가 좋아할 만한 <strong>새로운 인형</strong>을 발견했어요! 
+                        <span style="background: var(--color-secondary); color: white; padding: 2px 6px; border-radius: 4px;">AI 추천 ⭐</span>"
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    💝
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">미미는 어떻게 할까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(3)">
+                            <span class="choice-icon">👆</span>
+                            <span>정말 예뻐 보이니까 클릭해서 구매할래!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback2">
+                    <div class="feedback-title">💡 알아두기</div>
+                    <div class="feedback-text">
+                        AI는 데이터를 분석해서 사람이 좋아할 만한 상품을 추천해요. 
+                        하지만 AI도 실수할 수 있어요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3단계: 구매 결정 -->
+            <div class="stage" id="stage3">
+                <div class="stage-title">
+                    <span class="stage-number">3</span>
+                    <span>구매 결정</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">👧</span> 미미가 AI 추천 상품을 클릭했어요. 
+                    </div>
+                    <div class="scenario-text">
+                        상품 사진은 정말 예뻐 보였고, AI가 추천해줬으니 믿기로 했어요.
+                    </div>
+                    <div class="scenario-text">
+                        <strong>"배송료 무료! 별점 4.5개"</strong> 이런 정보도 있었어요.
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    🛒 ➡️ ✅
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">일주일 후...</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(4)">
+                            <span class="choice-icon">📦</span>
+                            <span>상품이 도착했어요. 클릭해서 확인해보세요!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback3">
+                    <div class="feedback-title">🤔 생각해봅시다</div>
+                    <div class="feedback-text">
+                        AI가 추천했다고 해서 항상 좋은 상품일까요? 
+                        구매 전에 우리가 확인해야 할 것들은 뭘까요?
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4단계: 문제 발생 -->
+            <div class="stage" id="stage4">
+                <div class="stage-title">
+                    <span class="stage-number">4</span>
+                    <span>문제 발생</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">📦</span> 상품이 도착했어요. 하지만...
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    😮
+                </div>
+
+                <div class="scenario-box" style="border-left-color: var(--color-error); background: #FFE8E8); margin-top: 20px;">
+                    <div class="scenario-text" style="color: var(--color-error);">
+                        <strong>어라? 이게 뭐야?</strong>
+                    </div>
+                    <ul style="margin-left: 20px; font-size: 15px;">
+                        <li>🪢 인형의 팔이 떨어져 있었어요</li>
+                        <li>🎨 사진과 달리 색깔이 이상했어요</li>
+                        <li>📏 생각보다 훨씬 작았어요</li>
+                        <li>🧵 꿰매기가 엉성했어요</li>
+                    </ul>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">이제 누구의 책임일까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="showQuestion('a')">
+                            <span class="choice-icon">🤖</span>
+                            <span>A. AI의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('b')">
+                            <span class="choice-icon">👧</span>
+                            <span>B. 미미(나)의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('c')">
+                            <span class="choice-icon">🏢</span>
+                            <span>C. 판매자/회사의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('d')">
+                            <span class="choice-icon">🤝</span>
+                            <span>D. 모두의 책임</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="answerSection" style="display: none; margin-top: 25px;">
+                    <div class="reflection-box">
+                        <div class="reflection-title">📌 정답 및 설명</div>
+                        <div id="answerText"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-next" onclick="goToStage(5)">다음 단계로</button>
+                        <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5단계: 마무리 -->
+            <div class="stage" id="stage5">
+                <div class="stage-title">
+                    <span class="stage-number">5</span>
+                    <span>무엇을 배웠을까요?</span>
+                </div>
+
+                <div class="reflection-box">
+                    <div class="reflection-title">🧠 생각 정리하기</div>
+                    <div class="reflection-item">✅ AI도 실수할 수 있어요</div>
+                    <div class="reflection-item">✅ 추천이 100% 정확한 것은 아니에요</div>
+                    <div class="reflection-item">✅ 구매 전에 여러 정보를 확인해야 해요</div>
+                    <div class="reflection-item">✅ 문제 발생 시 판매자에게 알리고 환불받을 수 있어요</div>
+                    <div class="reflection-item">✅ 사람의 판단이 중요해요</div>
+                </div>
+
+                <div style="background: #E3F2FD; padding: 20px; border-radius: 12px; margin-top: 20px; border-left: 4px solid var(--color-primary);">
+                    <div style="font-weight: 600; color: var(--color-primary); margin-bottom: 12px;">
+                        💡 AI 책임감이란?
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        <strong>공정성(공정한 추천)</strong> - AI가 모든 사람을 공정하게 대우해야 해요<br>
+                        <strong>투명성(알 수 있어야 함)</strong> - AI가 왜 이 상품을 추천했는지 알 수 있어야 해요<br>
+                        <strong>책임성(누군가 책임져야 함)</strong> - 문제가 생기면 누군가 책임져야 해요
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 30px;">
+                    <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            부산에듀원 2.0 | AI 윤리 교육 콘텐츠 | 6차시 활동 1
+        </footer>
+    </div>
+
+    <script>
+        let currentStage = 1;
+
+        function goToStage(stageNum) {
+            // 모든 stage 숨기기
+            document.querySelectorAll('.stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+
+            // 선택된 stage 보이기
+            document.getElementById(`stage${stageNum}`).classList.add('active');
+            
+            // progress 업데이트
+            const progress = (stageNum / 5) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+            
+            // 스크롤 맨 위로
+            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+            
+            currentStage = stageNum;
+        }
+
+        function showQuestion(answer) {
+            const answerSection = document.getElementById('answerSection');
+            const answerText = document.getElementById('answerText');
+
+            const answers = {
+                'a': {
+                    html: `<div class="reflection-item">이 선택은 부분적으로 맞아요.</div>
+                           <div class="reflection-item">AI가 잘못된 추천을 했지만, AI 자체가 '책임'을 질 수는 없어요.</div>
+                           <div class="reflection-item">AI는 도구일 뿐, <strong>AI를 만들고 사용하는 사람</strong>이 책임져야 해요.</div>`
+                },
+                'b': {
+                    html: `<div class="reflection-item">미미가 조금의 책임은 있어요.</div>
+                           <div class="reflection-item">하지만 구매 전에 AI 추천만 믿고 구매한 것이 전부 미미의 책임은 아니에요.</div>
+                           <div class="reflection-item">더 알아보고 구매했다면 좋았을 거예요.</div>`
+                },
+                'c': {
+                    html: `<div class="reflection-item">이것이 가장 직접적인 책임이에요!</div>
+                           <div class="reflection-item">판매자는 불량품을 판매한 책임이 있고,</div>
+                           <div class="reflection-item">플랫폼 회사는 거짓 정보를 확인할 책임이 있어요.</div>
+                           <div class="reflection-item">미미는 환불을 요청할 수 있어요.</div>`
+                },
+                'd': {
+                    html: `<div class="reflection-item">정답에 가까워요! 🎉</div>
+                           <div class="reflection-item"><strong>AI 개발자:</strong> 더 정확한 AI를 만들어야 해요</div>
+                           <div class="reflection-item"><strong>판매자:</strong> 상품 정보를 정확히 제공해야 해요</div>
+                           <div class="reflection-item"><strong>플랫폼 회사:</strong> 검증된 상품만 추천해야 해요</div>
+                           <div class="reflection-item"><strong>구매자(미미):</strong> 구매 전에 충분히 확인해야 해요</div>
+                           <div class="reflection-item" style="margin-top: 12px; background: rgba(50, 184, 198, 0.1); padding: 10px; border-radius: 6px;">
+                               <strong>이것이 '책임 있는 AI 사용'의 의미예요!</strong>
+                           </div>`
+                }
+            };
+
+            answerText.innerHTML = answers[answer].html;
+            answerSection.style.display = 'block';
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
