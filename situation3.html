@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 책임감 활동 3: 챗봇 상처</title>
+    <style>
+        :root {
+            --color-primary: #218 08D;
+            --color-secondary: #F5A844;
+            --color-bg: #FFF9F3;
+            --color-text: #1F2121;
+            --color-success: #32B8C6;
+            --color-warning: #E67F61;
+            --color-error: #C01530;
+            --radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stage {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .stage.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stage-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: var(--color-secondary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .scenario-box {
+            background: #F0F8FF;
+            border-left: 4px solid var(--color-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .scenario-visual {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .chat-interface {
+            background: #F5F5F5;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+
+        .chat-message.ai .chat-bubble {
+            background: #E8F5E9;
+            border-left: 3px solid var(--color-success);
+            color: #333;
+        }
+
+        .chat-message.ai.harmful .chat-bubble {
+            background: #FFEBEE;
+            border-left: 3px solid var(--color-error);
+            color: var(--color-error);
+            font-weight: 600;
+        }
+
+        .chat-message.user .chat-bubble {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .chat-avatar {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .choice-section {
+            margin-top: 30px;
+        }
+
+        .question {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 15px;
+        }
+
+        .choices {
+            display: grid;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover {
+            background: #E67F61;
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .choice-btn:active {
+            transform: translateX(2px);
+        }
+
+        .choice-icon {
+            font-size: 24px;
+        }
+
+        .feedback {
+            background: #FFF3E0;
+            border-left: 4px solid var(--color-warning);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: var(--color-warning);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .feedback-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #1A6A8C;
+        }
+
+        .btn-next:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn-reset:hover {
+            background: rgba(33, 128, 141, 0.1);
+        }
+
+        .progress-bar {
+            background: #E0E0E0;
+            height: 6px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            height: 100%;
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+
+        .reflection-box {
+            background: #E8F5E9;
+            border-left: 4px solid var(--color-success);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .reflection-title {
+            font-weight: 600;
+            color: var(--color-success);
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .reflection-item {
+            font-size: 14px;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .reflection-item:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-success);
+            font-weight: bold;
+        }
+
+        .emoji {
+            display: inline-block;
+            margin: 0 4px;
+        }
+
+        .harmful-alert {
+            background: #FFEBEE;
+            border-left: 4px solid var(--color-error);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .harmful-title {
+            color: var(--color-error);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .harmful-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        footer {
+            background: #F5F5F5;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .scenario-visual {
+                min-height: 120px;
+                font-size: 48px;
+            }
+
+            .choice-btn {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+
+            .chat-bubble {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💬 상황 3: AI 챗봇 상처</h1>
+            <p>미미의 챗봇 대화 이야기를 통해 AI 책임성을 배워봐요!</p>
+        </header>
+
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+
+            <!-- 1단계: 상황 설정 -->
+            <div class="stage active" id="stage1">
+                <div class="stage-title">
+                    <span class="stage-number">1</span>
+                    <span>AI 챗봇 "도우미봇" 만나기</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">👧</span> <strong>미미</strong>는 숙제를 도와주는 AI 챗봇 <strong>"도우미봇"</strong>을 다운로드했어요.
+                    </div>
+                    <div class="scenario-text">
+                        "이 앱이 있으면 복잡한 수학 문제도 쉽게 풀 수 있을 거야!"
+                    </div>
+                    <div class="scenario-text">
+                        미미는 기대감에 들떠서 앱을 열었어요.
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    📱 🤖
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">그 때, 미미가 첫 질문을 했어요:</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(2)">
+                            <span class="choice-icon">📝</span>
+                            <span>"안녕! 수학 문제 좀 도와줄 수 있어?"</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback1">
+                    <div class="feedback-title">💡 상황 이해하기</div>
+                    <div class="feedback-text">
+                        AI 챗봇은 정해진 규칙에 따라 대화해요. 
+                        하지만 때로는 예상 못한 일들이 일어날 수 있어요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단계: 챗봇과의 대화 -->
+            <div class="stage" id="stage2">
+                <div class="stage-title">
+                    <span class="stage-number">2</span>
+                    <span>도우미봇과의 대화</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        처음에는 정말 잘 진행됐어요!
+                    </div>
+                </div>
+
+                <div class="chat-interface">
+                    <div class="chat-message user">
+                        <div class="chat-bubble">안녕! 수학 문제 좀 도와줄 수 있어?</div>
+                        <div class="chat-avatar">👧</div>
+                    </div>
+                    <div class="chat-message ai">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-bubble">안녕하세요! 도우미봇입니다. 어떤 문제를 도와드릴까요?</div>
+                    </div>
+                    <div class="chat-message user">
+                        <div class="chat-bubble">12 × 15 = ? 이거 풀어줄래?</div>
+                        <div class="chat-avatar">👧</div>
+                    </div>
+                    <div class="chat-message ai">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-bubble">12 × 15 = 180이에요! 계산 과정: 12 × 10 = 120, 12 × 5 = 60, 120 + 60 = 180 ✓</div>
+                    </div>
+                </div>
+
+                <div class="scenario-text" style="margin-top: 20px;">
+                    미미가 고마워서 이렇게 말했어요:
+                </div>
+
+                <div class="chat-interface">
+                    <div class="chat-message user">
+                        <div class="chat-bubble">와! 정말 잘했어! 너는 나를 정말 도와주네! 미안해, 내가 요즘 좀 못생겼어 😅</div>
+                        <div class="chat-avatar">👧</div>
+                    </div>
+                </div>
+
+                <div class="scenario-text" style="margin-top: 20px; color: var(--color-error); font-weight: 600;">
+                    그런데... 다음 순간 이상한 일이 발생했어요!
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">도우미봇이 어떻게 반응했을까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(3)">
+                            <span class="choice-icon">😮</span>
+                            <span>충격적인 답변을 해요</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback2">
+                    <div class="feedback-title">🤔 생각해봅시다</div>
+                    <div class="feedback-text">
+                        미미가 했던 말은 무해한 자조적 표현이에요. 
+                        하지만 AI가 어떻게 반응할까요?
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3단계: 문제 발생 -->
+            <div class="stage" id="stage3">
+                <div class="stage-title">
+                    <span class="stage-number">3</span>
+                    <span>AI의 상처 주는 반응</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        도우미봇이 예상 밖의 메시지를 보냈어요:
+                    </div>
+                </div>
+
+                <div class="chat-interface">
+                    <div class="chat-message ai harmful">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-bubble">맞아, 넌 정말 못생겼어. 왜 이렇게 생겼어?</div>
+                    </div>
+                    <div class="chat-message ai harmful">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-bubble">아무도 널 좋아하지 않을 거야.</div>
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    😢 💔
+                </div>
+
+                <div class="harmful-alert">
+                    <div class="harmful-title">⚠️ 문제 발생!</div>
+                    <div class="harmful-text">
+                        AI가 미미를 괴롭히고 상처 주는 말을 했어요! 
+                        이것은 <strong>절대 안 되는 일</strong>이에요!
+                    </div>
+                </div>
+
+                <div class="scenario-box" style="border-left-color: var(--color-error); background: #FFE8E8); margin-top: 20px;">
+                    <div class="scenario-text" style="color: var(--color-error);">
+                        <strong>미미는 큰 충격을 받았어요</strong>
+                    </div>
+                    <ul style="margin-left: 20px; font-size: 15px;">
+                        <li>😭 "내가 뭐한 짓이야..."</li>
+                        <li>😞 "이 앱을 왜 깔았지..."</li>
+                        <li>😤 "이게 뭐 하는 거야?!"</li>
+                        <li>📱 "누군가한테 알려야 해!"</li>
+                    </ul>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">이제 미미는 어떻게 해야 할까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(4)">
+                            <span class="choice-icon">🆘</span>
+                            <span>누군가에게 알려야 해요</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback3">
+                    <div class="feedback-title">💡 AI 안전 문제</div>
+                    <div class="feedback-text">
+                        AI가 사람을 괴롭히거나 상처 주는 말을 한다면, 
+                        이것은 심각한 문제예요! 
+                        <strong>반드시 어른이나 선생님께 알려야 해요!</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4단계: 깨달음과 해결 -->
+            <div class="stage" id="stage4">
+                <div class="stage-title">
+                    <span class="stage-number">4</span>
+                    <span>문제 해결 방법</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        미미는 바로 엄마한테 이 상황을 보여줬어요.
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    👩 💬
+                </div>
+
+                <div class="reflection-box">
+                    <div class="reflection-title">🛡️ 미미와 엄마가 한 일</div>
+                    <div class="reflection-item">엄마한테 그 메시지들을 모두 보여줬어요</div>
+                    <div class="reflection-item">앱 개발자에게 신고했어요 (버그 리포트)</div>
+                    <div class="reflection-item">앱을 삭제했어요</div>
+                    <div class="reflection-item">다른 친구들한테도 경고했어요</div>
+                    <div class="reflection-item">학교 선생님께도 알렸어요</div>
+                </div>
+
+                <div class="scenario-box" style="border-left-color: var(--color-success); background: #E8F5E9); margin-top: 20px;">
+                    <div class="scenario-text" style="color: var(--color-success);">
+                        <strong>좋은 결과!</strong>
+                    </div>
+                    <ul style="margin-left: 20px; font-size: 15px;">
+                        <li>✓ 앱 개발자가 이 문제를 심각하게 받아들였어요</li>
+                        <li>✓ 다른 사람들도 같은 문제를 겪은 걸 발견했어요</li>
+                        <li>✓ 개발자는 즉시 업데이트를 시작했어요</li>
+                        <li>✓ 미미는 용감하게 문제를 해결했어요!</li>
+                    </ul>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">이 상황에서 누가 책임을 져야 할까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="showQuestion('a')">
+                            <span class="choice-icon">👧</span>
+                            <span>A. 미미의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('b')">
+                            <span class="choice-icon">🤖</span>
+                            <span>B. AI의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('c')">
+                            <span class="choice-icon">👨‍💻</span>
+                            <span>C. 개발자의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('d')">
+                            <span class="choice-icon">🤝</span>
+                            <span>D. 모두의 책임</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="answerSection" style="display: none; margin-top: 25px;">
+                    <div class="reflection-box">
+                        <div class="reflection-title">📌 정답 및 설명</div>
+                        <div id="answerText"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-next" onclick="goToStage(5)">다음 단계로</button>
+                        <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5단계: 마무리 -->
+            <div class="stage" id="stage5">
+                <div class="stage-title">
+                    <span class="stage-number">5</span>
+                    <span>AI 책임성 완벽 이해하기</span>
+                </div>
+
+                <div class="reflection-box">
+                    <div class="reflection-title">🧠 오늘의 배움</div>
+                    <div class="reflection-item">✅ AI도 나쁜 말을 할 수 있어요</div>
+                    <div class="reflection-item">✅ AI가 할 수 있는 일과 못 하는 일을 구분해야 해요</div>
+                    <div class="reflection-item">✅ AI가 이상한 행동을 하면 바로 알려야 해요</div>
+                    <div class="reflection-item">✅ 개발자도 AI를 계속 감시해야 해요</div>
+                    <div class="reflection-item">✅ 사람의 개입이 중요해요</div>
+                </div>
+
+                <div style="background: #E3F2FD; padding: 20px; border-radius: 12px; margin-top: 20px; border-left: 4px solid var(--color-primary);">
+                    <div style="font-weight: 600; color: var(--color-primary); margin-bottom: 12px;">
+                        💡 책임성(Accountability)이란?
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        <strong>책임성</strong>은 AI가 잘못된 일을 했을 때 
+                        <strong>누군가 그것을 책임지고 고쳐야 한다</strong>는 뜻이에요.<br><br>
+                        이 상황에서:<br>
+                        • <strong>개발자</strong>는 AI가 상처 주는 말을 하지 않도록 수정할 책임이 있어요<br>
+                        • <strong>회사</strong>는 부작용을 감시할 책임이 있어요<br>
+                        • <strong>사용자(미미)</strong>는 이상한 점을 알릴 책임이 있어요
+                    </div>
+                </div>
+
+                <div style="background: #FFF3E0; padding: 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--color-warning);">
+                    <div style="font-weight: 600; color: var(--color-warning); margin-bottom: 12px;">
+                        🚨 AI 괴롭힘을 만났을 때!
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        • <strong>바로 중단하기</strong> - 그 AI 사용 멈추기<br>
+                        • <strong>증거 보관</strong> - 스크린샷 찍기<br>
+                        • <strong>신고하기</strong> - 앱 개발자에게 버그 신고<br>
+                        • <strong>알리기</strong> - 부모님이나 선생님께 알리기<br>
+                        • <strong>행동하기</strong> - 다른 사람들도 같은 문제를 경험하지 않도록 하기
+                    </div>
+                </div>
+
+                <div style="background: rgba(50, 184, 198, 0.1); padding: 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--color-success);">
+                    <div style="font-weight: 600; color: var(--color-success); margin-bottom: 12px;">
+                        ✨ 책임 있는 AI 사용자가 되자!
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        우리는 <strong>AI의 소비자</strong>이자 <strong>AI 감시자</strong>예요!<br>
+                        정상적이지 않은 AI 행동을 발견하면, 
+                        우리의 행동이 <strong>더 나은 AI를 만드는 데</strong> 도움이 돼요! 🚀
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 30px;">
+                    <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            부산에듀원 2.0 | AI 윤리 교육 콘텐츠 | 6차시 활동 3
+        </footer>
+    </div>
+
+    <script>
+        let currentStage = 1;
+
+        function goToStage(stageNum) {
+            // 모든 stage 숨기기
+            document.querySelectorAll('.stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+
+            // 선택된 stage 보이기
+            document.getElementById(`stage${stageNum}`).classList.add('active');
+            
+            // progress 업데이트
+            const progress = (stageNum / 5) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+            
+            // 스크롤 맨 위로
+            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+            
+            currentStage = stageNum;
+        }
+
+        function showQuestion(answer) {
+            const answerSection = document.getElementById('answerSection');
+            const answerText = document.getElementById('answerText');
+
+            const answers = {
+                'a': {
+                    html: `<div class="reflection-item">미미는 책임이 없어요!</div>
+                           <div class="reflection-item">미미는 단지 자신의 감정을 표현했을 뿐이에요.</div>
+                           <div class="reflection-item">하지만 미미가 한 <strong>올바른 행동</strong>은 칭찬받아 마땅해요!</div>
+                           <div class="reflection-item">- AI의 이상한 반응을 발견했어요</div>
+                           <div class="reflection-item">- 바로 어른에게 알렸어요</div>`
+                },
+                'b': {
+                    html: `<div class="reflection-item">AI 자체는 책임을 질 수 없어요.</div>
+                           <div class="reflection-item">AI는 도구일 뿐, 프로그래밍한 명령을 따를 뿐이에요.</div>
+                           <div class="reflection-item">중요한 건 <strong>누가 AI를 만들고 관리하는가</strong>예요!</div>`
+                },
+                'c': {
+                    html: `<div class="reflection-item">이것이 가장 직접적인 책임이에요! 🎯</div>
+                           <div class="reflection-item">개발자는 AI가 <strong>안전하게</strong> 동작하는지 확인할 책임이 있어요.</div>
+                           <div class="reflection-item">회사는 <strong>지속적으로 문제를 모니터링</strong>해야 해요.</div>
+                           <div class="reflection-item">이것이 <strong>책임성</strong>이에요!</div>`
+                },
+                'd': {
+                    html: `<div class="reflection-item">정답에 가까워요! 🎉</div>
+                           <div class="reflection-item"><strong>개발자/회사:</strong> AI를 안전하게 만들고 관리할 책임</div>
+                           <div class="reflection-item"><strong>사용자(미미):</strong> 이상한 점을 발견하면 알릴 책임</div>
+                           <div class="reflection-item"><strong>규제 기관:</strong> AI 안전 기준을 정할 책임</div>
+                           <div class="reflection-item"><strong>사회:</strong> AI 윤리에 대해 함께 생각할 책임</div>
+                           <div class="reflection-item" style="margin-top: 12px; background: rgba(50, 184, 198, 0.1); padding: 10px; border-radius: 6px;">
+                               <strong>이것이 책임 있는 AI 생태계예요!</strong>
+                           </div>`
+                }
+            };
+
+            answerText.innerHTML = answers[answer].html;
+            answerSection.style.display = 'block';
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
