@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 책임감 활동 2: 번역기 오류</title>
+    <style>
+        :root {
+            --color-primary: #2180 8D;
+            --color-secondary: #F5A844;
+            --color-bg: #FFF9F3;
+            --color-text: #1F2121;
+            --color-success: #32B8C6;
+            --color-warning: #E67F61;
+            --color-error: #C01530;
+            --radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stage {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .stage.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stage-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: var(--color-secondary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .scenario-box {
+            background: #F0F8FF;
+            border-left: 4px solid var(--color-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .scenario-visual {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .chat-bubble {
+            background: #E8F5E9;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 10px 0;
+            border-left: 3px solid var(--color-success);
+            font-size: 14px;
+        }
+
+        .chat-bubble.error {
+            background: #FFEBEE;
+            border-left-color: var(--color-error);
+        }
+
+        .chat-bubble.warning {
+            background: #FFF3E0;
+            border-left-color: var(--color-warning);
+        }
+
+        .translation-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .translation-box {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .translation-box.correct {
+            border-color: var(--color-success);
+            background: rgba(50, 184, 198, 0.05);
+        }
+
+        .translation-box.wrong {
+            border-color: var(--color-error);
+            background: rgba(192, 21, 47, 0.05);
+        }
+
+        .translation-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .translation-label.correct {
+            color: var(--color-success);
+        }
+
+        .translation-label.wrong {
+            color: var(--color-error);
+        }
+
+        .translation-text {
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .choice-section {
+            margin-top: 30px;
+        }
+
+        .question {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 15px;
+        }
+
+        .choices {
+            display: grid;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover {
+            background: #E67F61;
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .choice-btn:active {
+            transform: translateX(2px);
+        }
+
+        .choice-icon {
+            font-size: 24px;
+        }
+
+        .feedback {
+            background: #FFF3E0;
+            border-left: 4px solid var(--color-warning);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: var(--color-warning);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .feedback-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #1A6A8C;
+        }
+
+        .btn-next:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn-reset:hover {
+            background: rgba(33, 128, 141, 0.1);
+        }
+
+        .progress-bar {
+            background: #E0E0E0;
+            height: 6px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            height: 100%;
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+
+        .reflection-box {
+            background: #E8F5E9;
+            border-left: 4px solid var(--color-success);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .reflection-title {
+            font-weight: 600;
+            color: var(--color-success);
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .reflection-item {
+            font-size: 14px;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .reflection-item:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-success);
+            font-weight: bold;
+        }
+
+        .emoji {
+            display: inline-block;
+            margin: 0 4px;
+        }
+
+        footer {
+            background: #F5F5F5;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .scenario-visual {
+                min-height: 120px;
+                font-size: 48px;
+            }
+
+            .choice-btn {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+
+            .translation-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 상황 2: AI 번역기 오류</h1>
+            <p>미미의 국제 화상 통화 이야기를 통해 AI 투명성을 배워봐요!</p>
+        </header>
+
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+
+            <!-- 1단계: 상황 설정 -->
+            <div class="stage active" id="stage1">
+                <div class="stage-title">
+                    <span class="stage-number">1</span>
+                    <span>국제 친구와 화상통화</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">👧</span> <strong>미미</strong>는 미국에 사는 친구 <strong>Emma(에마)</strong>와 화상통화를 시작했어요.
+                    </div>
+                    <div class="scenario-text">
+                        미미는 영어를 잘 못해서 <strong>AI 번역 앱</strong>을 켜두었어요.
+                    </div>
+                    <div class="scenario-text">
+                        "영어로 뭐라고 말해도 한국어로 번역되고, 내 말도 영어로 번역되어서 에마한테 전달되겠지!"
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    💻 🌍
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">그 때, 미미가 영어로 이렇게 말했어요:</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(2)">
+                            <span class="choice-icon">🗣️</span>
+                            <span>"I'm dying laughing!"</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback1">
+                    <div class="feedback-title">💡 상황 이해하기</div>
+                    <div class="feedback-text">
+                        "I'm dying laughing"은 영어권 학생들이 자주 사용하는 표현이에요. 
+                        정말 죽는 건 아니고, "너무 웃겨서 배가 아파요!"라는 의미예요. 😄
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단계: 번역 -->
+            <div class="stage" id="stage2">
+                <div class="stage-title">
+                    <span class="stage-number">2</span>
+                    <span>AI 번역 시작</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">🤖</span> AI 번역 앱이 미미의 말을 번역하기 시작했어요.
+                    </div>
+                    <div class="scenario-text">
+                        하지만... AI는 <strong>문맥(상황)</strong>을 제대로 이해하지 못했어요.
+                    </div>
+                </div>
+
+                <div class="translation-comparison">
+                    <div class="translation-box wrong">
+                        <div class="translation-label wrong">
+                            ❌ AI 번역 결과
+                        </div>
+                        <div class="translation-text">
+                            "나는 진짜로 죽었어요!"<br>
+                            "상황이 심각해요!"
+                        </div>
+                    </div>
+                    <div class="translation-box correct">
+                        <div class="translation-label correct">
+                            ✓ 정확한 의미
+                        </div>
+                        <div class="translation-text">
+                            "너무 웃겨서<br>배가 아파요!"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    ⚠️
+                </div>
+
+                <div class="chat-bubble error">
+                    AI 번역이 에마한테 전달되었어요:<br>
+                    "나는 진짜로 죽었어요! 상황이 심각해요!"
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">에마는 어떻게 반응했을까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(3)">
+                            <span class="choice-icon">😨</span>
+                            <span>미미를 너무 걱정했어요</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback2">
+                    <div class="feedback-title">🤔 생각해봅시다</div>
+                    <div class="feedback-text">
+                        AI가 단어의 뜻은 알았지만, 상황과 감정을 제대로 이해하지 못했어요. 
+                        이것이 <strong>투명성 문제</strong>예요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3단계: 결과 -->
+            <div class="stage" id="stage3">
+                <div class="stage-title">
+                    <span class="stage-number">3</span>
+                    <span>에마의 반응</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">👱‍♀️</span> 에마의 화면에는 미미의 메시지가 이렇게 보였어요:
+                    </div>
+                </div>
+
+                <div class="chat-bubble error">
+                    "나는 진짜로 죽었어요! 상황이 심각해요!"
+                </div>
+
+                <div class="scenario-visual">
+                    😭 ❓
+                </div>
+
+                <div class="scenario-box" style="border-left-color: var(--color-error); background: #FFE8E8);">
+                    <div class="scenario-text" style="color: var(--color-error);">
+                        <strong>에마는 깜짝 놀랐어요!</strong>
+                    </div>
+                    <ul style="margin-left: 20px; font-size: 15px;">
+                        <li>😟 "미미 괜찮아?!"</li>
+                        <li>😰 "뭔가 심각한 일이 있어?"</li>
+                        <li>😭 "선생님을 부를까?!"</li>
+                        <li>🏥 "응급차가 필요해?"</li>
+                    </ul>
+                </div>
+
+                <div class="chat-bubble warning">
+                    에마의 응답: "미미!!! 뭐하는 거야? 대답해! 너 괜찮아??"
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">이제 미미는 어떻게 할까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(4)">
+                            <span class="choice-icon">🤔</span>
+                            <span>무슨 일이 생겼는지 알아봐요</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback3">
+                    <div class="feedback-title">💡 상황 분석</div>
+                    <div class="feedback-text">
+                        AI 번역기가 <strong>"뜻"</strong>은 맞게 번역했지만, 
+                        <strong>"의도"</strong>를 이해하지 못했어요. 
+                        이것이 AI의 한계예요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4단계: 깨달음 -->
+            <div class="stage" id="stage4">
+                <div class="stage-title">
+                    <span class="stage-number">4</span>
+                    <span>문제의 원인 분석</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        미미는 에마를 다시 부르고 설명했어요:
+                    </div>
+                </div>
+
+                <div class="chat-bubble">
+                    미미 (한국어): "아니야, 농담이야! 너무 웃겨서 배가 아프다고 했는데..."
+                </div>
+
+                <div class="chat-bubble">
+                    에마: "어라? 그게 죽었다는 뜻이었어? 이제 이해했어! 다행이야! 😅"
+                </div>
+
+                <div class="scenario-visual">
+                    👯 ✨
+                </div>
+
+                <div class="reflection-box">
+                    <div class="reflection-title">🔍 이 상황에서 배울 점</div>
+                    <div class="reflection-item">AI는 <strong>기계적으로</strong> 단어를 번역할 뿐이에요</div>
+                    <div class="reflection-item">AI는 문화, 감정, 상황을 <strong>완벽하게</strong> 이해하지 못해요</div>
+                    <div class="reflection-item">특히 <strong>은유, 농담, 속담</strong>은 번역하기 어려워요</div>
+                    <div class="reflection-item">AI 번역이 완벽하지 않을 수 있다는 걸 알아야 해요</div>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">누구의 책임일까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="showQuestion('a')">
+                            <span class="choice-icon">🤖</span>
+                            <span>A. AI 번역기의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('b')">
+                            <span class="choice-icon">👧</span>
+                            <span>B. 미미의 책임</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('c')">
+                            <span class="choice-icon">💬</span>
+                            <span>C. 의사소통 방식의 문제</span>
+                        </button>
+                        <button class="choice-btn" onclick="showQuestion('d')">
+                            <span class="choice-icon">🤝</span>
+                            <span>D. 모두의 책임</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="answerSection" style="display: none; margin-top: 25px;">
+                    <div class="reflection-box">
+                        <div class="reflection-title">📌 정답 및 설명</div>
+                        <div id="answerText"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-next" onclick="goToStage(5)">다음 단계로</button>
+                        <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5단계: 마무리 -->
+            <div class="stage" id="stage5">
+                <div class="stage-title">
+                    <span class="stage-number">5</span>
+                    <span>AI 투명성 이해하기</span>
+                </div>
+
+                <div class="reflection-box">
+                    <div class="reflection-title">🧠 오늘의 배움</div>
+                    <div class="reflection-item">✅ AI가 하는 모든 일이 100% 정확한 건 아니에요</div>
+                    <div class="reflection-item">✅ AI는 <strong>상황과 감정</strong>을 완벽하게 이해하지 못해요</div>
+                    <div class="reflection-item">✅ AI가 뭔가 이상하면 다시 확인해야 해요</div>
+                    <div class="reflection-item">✅ AI를 사용할 때 항상 의심하는 자세가 필요해요</div>
+                    <div class="reflection-item">✅ 사람이 최종 판단을 해야 해요</div>
+                </div>
+
+                <div style="background: #E3F2FD; padding: 20px; border-radius: 12px; margin-top: 20px; border-left: 4px solid var(--color-primary);">
+                    <div style="font-weight: 600; color: var(--color-primary); margin-bottom: 12px;">
+                        💡 투명성(Transparency)이란?
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        <strong>투명성</strong>은 AI가 어떻게 결정을 내렸는지, 왜 그렇게 했는지 
+                        <strong>알 수 있어야 한다</strong>는 뜻이에요.<br><br>
+                        이 상황에서는 AI가 왜 "I'm dying"을 "죽었어"로 번역했는지 
+                        그 과정을 우리가 이해할 수 없었어요.<br>
+                        이것이 <strong>투명성 부족</strong>이에요!
+                    </div>
+                </div>
+
+                <div style="background: #FFF3E0; padding: 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--color-warning);">
+                    <div style="font-weight: 600; color: var(--color-warning); margin-bottom: 12px;">
+                        🎯 현명한 AI 사용법
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        • AI 번역은 참고만 하고, 꼭 다시 확인해요<br>
+                        • 중요한 내용은 AI에만 의존하지 않기<br>
+                        • AI 결과가 이상하면 바로 물어보기<br>
+                        • 누군가가 AI 결과를 확인하고 책임지기
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 30px;">
+                    <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            부산에듀원 2.0 | AI 윤리 교육 콘텐츠 | 6차시 활동 2
+        </footer>
+    </div>
+
+    <script>
+        let currentStage = 1;
+
+        function goToStage(stageNum) {
+            // 모든 stage 숨기기
+            document.querySelectorAll('.stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+
+            // 선택된 stage 보이기
+            document.getElementById(`stage${stageNum}`).classList.add('active');
+            
+            // progress 업데이트
+            const progress = (stageNum / 5) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+            
+            // 스크롤 맨 위로
+            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+            
+            currentStage = stageNum;
+        }
+
+        function showQuestion(answer) {
+            const answerSection = document.getElementById('answerSection');
+            const answerText = document.getElementById('answerText');
+
+            const answers = {
+                'a': {
+                    html: `<div class="reflection-item">맞아요! AI 번역기가 잘못 번역했어요.</div>
+                           <div class="reflection-item">하지만 AI 개발자들도 이것이 어려운 문제라는 걸 알고 있어요.</div>
+                           <div class="reflection-item">그래서 번역기 회사는 <strong>더 나은 AI를 만들기 위해</strong> 노력해야 해요.</div>`
+                },
+                'b': {
+                    html: `<div class="reflection-item">미미가 조금의 책임은 있어요.</div>
+                           <div class="reflection-item">번역기에만 의존하지 말고, 중요한 말은 다시 확인했으면 좋았을 거예요.</div>
+                           <div class="reflection-item">하지만 미미가 AI를 잘못 사용한 건 아니에요.</div>`
+                },
+                'c': {
+                    html: `<div class="reflection-item">이것도 맞는 설명이에요! 🎉</div>
+                           <div class="reflection-item">언어는 문화와 상황에 따라 의미가 달라져요.</div>
+                           <div class="reflection-item">AI는 이런 <strong>복잡한 의사소통</strong>을 완벽하게 이해하기 어려워요.</div>
+                           <div class="reflection-item">그래서 우리가 AI 결과를 확인해야 하는 거예요!</div>`
+                },
+                'd': {
+                    html: `<div class="reflection-item">정답에 가까워요! 🎉</div>
+                           <div class="reflection-item"><strong>AI 개발자:</strong> 상황을 더 잘 이해하는 AI를 만들어야 해요</div>
+                           <div class="reflection-item"><strong>번역 서비스 회사:</strong> 사용자 경고 문구를 더 명확히 해야 해요</div>
+                           <div class="reflection-item"><strong>사용자(미미):</strong> AI 결과가 맞는지 확인해야 해요</div>
+                           <div class="reflection-item" style="margin-top: 12px; background: rgba(50, 184, 198, 0.1); padding: 10px; border-radius: 6px;">
+                               <strong>이것이 책임 있는 AI 사용이에요!</strong>
+                           </div>`
+                }
+            };
+
+            answerText.innerHTML = answers[answer].html;
+            answerSection.style.display = 'block';
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
