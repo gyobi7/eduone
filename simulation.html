@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 윤리 시뮬레이션 게임</title>
+    <style>
+        :root {
+            --color-primary: #8B5CF6;
+            --color-secondary: #EC4899;
+            --color-success: #10B981;
+            --color-warning: #F59E0B;
+            --color-error: #EF4444;
+            --color-bg: #F5F3FF;
+            --color-text: #1F2121;
+            --radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 15px;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, #F0F9FF, #F0FAFF);
+            border-left: 4px solid var(--color-primary);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .score-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        .scenario-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scenario-icon {
+            font-size: 32px;
+        }
+
+        .scenario-box {
+            background: #F8F4FF;
+            border: 2px solid #E9D5FF;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .scenario-situation {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        .scenario-detail {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .consequence-list {
+            background: white;
+            border-left: 4px solid var(--color-warning);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .consequence-title {
+            font-weight: 600;
+            color: var(--color-warning);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .consequence-item {
+            font-size: 14px;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .consequence-item:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--color-warning);
+            font-weight: bold;
+        }
+
+        .choices-container {
+            display: grid;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .choice-btn {
+            background: white;
+            border: 2px solid #E5E7EB;
+            padding: 18px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--color-text);
+        }
+
+        .choice-btn:hover {
+            background: #F3F4F6;
+            border-color: var(--color-secondary);
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .choice-btn:active {
+            transform: translateX(2px);
+        }
+
+        .choice-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .choice-label {
+            flex: 1;
+        }
+
+        .choice-brief {
+            font-size: 13px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .result-screen {
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .result-icon {
+            font-size: 60px;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #F0F9FF, #F0FAFF);
+            border-left: 4px solid var(--color-primary);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+        }
+
+        .result-message {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 15px;
+        }
+
+        .result-detail {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .impact-item {
+            background: white;
+            border: 2px solid #E5E7EB;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .impact-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .impact-change {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .impact-change.positive {
+            color: var(--color-success);
+        }
+
+        .impact-change.negative {
+            color: var(--color-error);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #7C3AED;
+        }
+
+        .btn-restart {
+            background: transparent;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn-restart:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .final-screen {
+            text-align: center;
+        }
+
+        .final-score {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin: 20px 0;
+        }
+
+        .final-message {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .ethics-summary {
+            background: linear-gradient(135deg, #F3E8FF, #FCE7F3);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: left;
+        }
+
+        .ethics-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 15px;
+        }
+
+        .ethics-item {
+            font-size: 15px;
+            margin: 12px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .ethics-item:before {
+            content: "⭐";
+            position: absolute;
+            left: 0;
+        }
+
+        footer {
+            background: #F5F5F5;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            border-top: 1px solid #E0E0E0;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .score-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .choice-btn {
+                padding: 14px 16px;
+                font-size: 15px;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 AI 윤리 시뮬레이션 게임</h1>
+            <p>당신의 선택이 세상을 만들어요! 올바른 결정을 해봅시다!</p>
+        </header>
+
+        <div class="content">
+            <!-- 시나리오 1 -->
+            <div class="game-screen active" id="scenario1">
+                <div class="score-bar">
+                    <div class="score-item">
+                        <div class="score-label">🤖 공정성</div>
+                        <div class="score-value" id="fairness1">50</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">🔍 투명성</div>
+                        <div class="score-value" id="transparency1">50</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">📋 책임성</div>
+                        <div class="score-value" id="accountability1">50</div>
+                    </div>
+                </div>
+
+                <div class="scenario-title">
+                    <span class="scenario-icon">🏢</span>
+                    <span>채용 AI 시스템</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-situation">
+                        당신은 큰 회사의 채용 담당자입니다!<br>
+                        새로운 채용 AI 시스템을 도입하려고 합니다.
+                    </div>
+                    <div class="scenario-detail">
+                        이 AI는 과거 데이터를 학습했어요. 하지만 과거에 남성 직원이 더 많이 채용되었어요.<br>
+                        그래서 AI가 남성 지원자들에게만 높은 점수를 줄 가능성이 있어요!
+                    </div>
+                    <div class="consequence-list">
+                        <div class="consequence-title">⚠️ 만약 이대로 사용한다면?</div>
+                        <div class="consequence-item">여성 지원자들이 불공정하게 떨어져요</div>
+                        <div class="consequence-item">문제가 뉴스에 보도돼요</div>
+                        <div class="consequence-item">회사 신뢰도가 떨어져요</div>
+                    </div>
+                </div>
+
+                <div class="choices-container">
+                    <button class="choice-btn" onclick="makeChoice(1, 'fair')">
+                        <span class="choice-icon">✅</span>
+                        <div>
+                            <div class="choice-label">A. 데이터 검사 후 편향 제거</div>
+                            <div class="choice-brief">시간이 걸리지만 공정한 방법</div>
+                        </div>
+                    </button>
+                    <button class="choice-btn" onclick="makeChoice(1, 'unfair')">
+                        <span class="choice-icon">⚡</span>
+                        <div>
+                            <div class="choice-label">B. 바로 도입해서 빠르게 채용</div>
+                            <div class="choice-brief">빠르지만 위험한 방법</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 시나리오 1 결과 -->
+            <div class="game-screen" id="result1">
+                <div class="result-title" id="resultTitle1">
+                    <span class="result-icon">🎉</span>
+                    <span id="resultText1"></span>
+                </div>
+
+                <div class="result-box" id="resultBox1"></div>
+
+                <div class="impact-grid">
+                    <div class="impact-item">
+                        <div class="impact-label">공정성</div>
+                        <div class="impact-change" id="impactFair1"></div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-label">투명성</div>
+                        <div class="impact-change" id="impactTrans1"></div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-label">책임성</div>
+                        <div class="impact-change" id="impactAcc1"></div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-next" onclick="nextScenario(2)">다음 상황</button>
+                </div>
+            </div>
+
+            <!-- 시나리오 2 -->
+            <div class="game-screen" id="scenario2">
+                <div class="score-bar">
+                    <div class="score-item">
+                        <div class="score-label">🤖 공정성</div>
+                        <div class="score-value" id="fairness2"></div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">🔍 투명성</div>
+                        <div class="score-value" id="transparency2"></div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">📋 책임성</div>
+                        <div class="score-value" id="accountability2"></div>
+                    </div>
+                </div>
+
+                <div class="scenario-title">
+                    <span class="scenario-icon">🏥</span>
+                    <span>의료 AI 진단 시스템</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-situation">
+                        당신은 병원의 의사입니다!<br>
+                        새로운 의료 진단 AI를 도입했는데, 환자가 의문을 제기했어요.
+                    </div>
+                    <div class="scenario-detail">
+                        환자: "의사님, 이 진단이 왜 감기라고 했어요? 기준이 뭐예요?"<br>
+                        문제는... AI가 왜 그렇게 진단했는지 설명할 수 없어요!
+                    </div>
+                    <div class="consequence-list">
+                        <div class="consequence-title">⚠️ 투명성이 없으면?</div>
+                        <div class="consequence-item">환자가 진단을 신뢰할 수 없어요</div>
+                        <div class="consequence-item">AI 실수가 있어도 찾기 어려워요</div>
+                        <div class="consequence-item">법적 문제가 생길 수 있어요</div>
+                    </div>
+                </div>
+
+                <div class="choices-container">
+                    <button class="choice-btn" onclick="makeChoice(2, 'transparent')">
+                        <span class="choice-icon">🔍</span>
+                        <div>
+                            <div class="choice-label">A. 환자에게 자세히 설명하기</div>
+                            <div class="choice-brief">"이 증상들을 봐서 감기로 진단했어요"</div>
+                        </div>
+                    </button>
+                    <button class="choice-btn" onclick="makeChoice(2, 'opaque')">
+                        <span class="choice-icon">🙅</span>
+                        <div>
+                            <div class="choice-label">B. 그냥 AI 판정을 믿으라고 하기</div>
+                            <div class="choice-brief">"전문가 AI라니까 믿어"</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 시나리오 2 결과 -->
+            <div class="game-screen" id="result2">
+                <div class="result-title" id="resultTitle2">
+                    <span class="result-icon">🎉</span>
+                    <span id="resultText2"></span>
+                </div>
+
+                <div class="result-box" id="resultBox2"></div>
+
+                <div class="impact-grid">
+                    <div class="impact-item">
+                        <div class="impact-label">공정성</div>
+                        <div class="impact-change" id="impactFair2"></div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-label">투명성</div>
+                        <div class="impact-change" id="impactTrans2"></div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-label">책임성</div>
+                        <div class="impact-change" id="impactAcc2"></div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-next" onclick="nextScenario(3)">다음 상황</button>
+                </div>
+            </div>
+
+            <!-- 시나리오 3 -->
+            <div class="game-screen" id="scenario3">
+                <div class="score-bar">
+                    <div class="score-item">
+                        <div class="score-label">🤖 공정성</div>
+                        <div class="score-value" id="fairness3"></div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">🔍 투명성</div>
+                        <div class="score-value" id="transparency3"></div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">📋 책임성</div>
+                        <div class="score-value" id="accountability3"></div>
+                    </div>
+                </div>
+
+                <div class="scenario-title">
+                    <span class="scenario-icon">⚖️</span>
+                    <span>AI 오류 발생!</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-situation">
+                        큰 문제가 발생했어요!<br>
+                        당신 회사의 AI가 잘못된 결정을 해서 사람을 다치게 했어요!
+                    </div>
+                    <div class="scenario-detail">
+                        피해자가 당신 회사를 찾아와서 항의했어요.<br>
+                        "이 AI 때문에 저 다쳤어요! 책임져야 하잖아요!"
+                    </div>
+                    <div class="consequence-list">
+                        <div class="consequence-title">⚠️ 당신의 선택은?</div>
+                        <div class="consequence-item">A. 투명하게 인정하고 배상하기</div>
+                        <div class="consequence-item">B. "AI가 한 거라 우리 책임이 아니다"라고 말하기</div>
+                    </div>
+                </div>
+
+                <div class="choices-container">
+                    <button class="choice-btn" onclick="makeChoice(3, 'responsible')">
+                        <span class="choice-icon">💚</span>
+                        <div>
+                            <div class="choice-label">A. 책임을 지고 배상하기</div>
+                            <div class="choice-brief">"죄송합니다. 저희가 책임집니다"</div>
+                        </div>
+                    </button>
+                    <button class="choice-btn" onclick="makeChoice(3, 'irresponsible')">
+                        <span class="choice-icon">❌</span>
+                        <div>
+                            <div class="choice-label">B. 책임을 피하기</div>
+                            <div class="choice-brief">"AI가 한 거라 우리 책임 아님"</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 시나리오 3 결과 -->
+            <div class="game-screen" id="result3">
+                <div class="result-title" id="resultTitle3">
+                    <span class="result-icon">🎉</span>
+                    <span id="resultText3"></span>
+                </div>
+
+                <div class="result-box" id="resultBox3"></div>
+
+                <div class="impact-grid">
+                    <div class="impact-item">
+                        <div class="impact-label">공정성</div>
+                        <div class="impact-change" id="impactFair3"></div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-label">투명성</div>
+                        <div class="impact-change" id="impactTrans3"></div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-label">책임성</div>
+                        <div class="impact-change" id="impactAcc3"></div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-next" onclick="nextScenario(4)">최종 결과 보기</button>
+                </div>
+            </div>
+
+            <!-- 최종 결과 -->
+            <div class="game-screen" id="finalResult">
+                <div class="result-screen">
+                    <div class="final-score" id="finalScore"></div>
+                    <div class="final-message" id="finalMessage"></div>
+
+                    <div class="ethics-summary">
+                        <div class="ethics-title">🏆 당신의 선택들</div>
+                        <div class="ethics-item" id="choice1Summary"></div>
+                        <div class="ethics-item" id="choice2Summary"></div>
+                        <div class="ethics-item" id="choice3Summary"></div>
+                    </div>
+
+                    <div class="ethics-summary">
+                        <div class="ethics-title">💡 최종 평가</div>
+                        <div id="finalEvaluation"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-restart" onclick="restartGame()">게임 다시하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            부산에듀원 2.0 | AI 윤리 교육 콘텐츠 | 시뮬레이션 게임
+        </footer>
+    </div>
+
+    <script>
+        let scores = {
+            fairness: 50,
+            transparency: 50,
+            accountability: 50
+        };
+
+        let choices = [];
+
+        function makeChoice(scenario, choice) {
+            const impacts = {
+                1: {
+                    fair: { fairness: 30, transparency: 20, accountability: 25, message: "훌륭한 선택! 🌟" },
+                    unfair: { fairness: -30, transparency: -10, accountability: -20, message: "위험한 선택! ⚠️" }
+                },
+                2: {
+                    transparent: { fairness: 20, transparency: 35, accountability: 25, message: "완벽한 선택! 🌟" },
+                    opaque: { fairness: -10, transparency: -35, accountability: -20, message: "좋지 않은 선택! ⚠️" }
+                },
+                3: {
+                    responsible: { fairness: 25, transparency: 30, accountability: 40, message: "도덕적인 선택! 🌟" },
+                    irresponsible: { fairness: -20, transparency: -25, accountability: -40, message: "무책임한 선택! ⚠️" }
+                }
+            };
+
+            const impact = impacts[scenario][choice];
+            scores.fairness = Math.max(0, Math.min(100, scores.fairness + impact.fairness));
+            scores.transparency = Math.max(0, Math.min(100, scores.transparency + impact.transparency));
+            scores.accountability = Math.max(0, Math.min(100, scores.accountability + impact.accountability));
+
+            choices.push({ scenario, choice, impact });
+
+            showResult(scenario, impact);
+        }
+
+        function showResult(scenario, impact) {
+            const resultScreen = document.getElementById(`result${scenario}`);
+            const resultTitle = document.getElementById(`resultTitle${scenario}`);
+            const resultText = document.getElementById(`resultText${scenario}`);
+            const resultBox = document.getElementById(`resultBox${scenario}`);
+
+            const messages = {
+                1: {
+                    fair: "✅ 공정한 선택을 했어요!<br>데이터를 검사해서 편향을 제거했어요. 이제 모든 지원자가 공평하게 평가돼요!",
+                    unfair: "❌ 위험한 결정이었어요!<br>편향된 AI로 인해 여성 지원자들이 불공정하게 떨어졌어요. 뉴스에도 보도됐어요!"
+                },
+                2: {
+                    transparent: "✅ 투명한 설명을 했어요!<br>환자가 진단 기준을 이해하고 신뢰하게 됐어요. 더 안전한 의료 시스템이 됐어요!",
+                    opaque: "❌ 신뢰를 잃었어요!<br>환자들이 AI를 믿지 않게 됐어요. 병원의 평판도 떨어졌어요!"
+                },
+                3: {
+                    responsible: "✅ 책임감 있는 태도예요!<br>회사가 피해를 배상했어요. 사람들이 당신 회사를 다시 신뢰하게 됐어요!",
+                    irresponsible: "❌ 큰 문제가 됐어요!<br>법정에서 회사가 더 큰 배상금을 지급하게 됐어요. 신뢰가 완전히 떨어졌어요!"
+                }
+            };
+
+            const impactMessages = {
+                1: {
+                    fair: { fair: "+30", trans: "+20", acc: "+25" },
+                    unfair: { fair: "-30", trans: "-10", acc: "-20" }
+                },
+                2: {
+                    transparent: { fair: "+20", trans: "+35", acc: "+25" },
+                    opaque: { fair: "-10", trans: "-35", acc: "-20" }
+                },
+                3: {
+                    responsible: { fair: "+25", trans: "+30", acc: "+40" },
+                    irresponsible: { fair: "-20", trans: "-25", acc: "-40" }
+                }
+            };
+
+            const choice = choices[choices.length - 1].choice;
+            const impactMsg = impactMessages[scenario][choice];
+
+            resultTitle.innerHTML = impact.message.split(" ")[0] === "훌륭한" || impact.message.split(" ")[0] === "완벽한" || impact.message.split(" ")[0] === "도덕적인" ? "🎉 좋은 결정!" : "😢 안 좋은 결정!";
+            resultBox.innerHTML = `<div class="result-message">${messages[scenario][choice]}</div>`;
+
+            document.getElementById(`impactFair${scenario}`).textContent = impactMsg.fair;
+            document.getElementById(`impactTrans${scenario}`).textContent = impactMsg.trans;
+            document.getElementById(`impactAcc${scenario}`).textContent = impactMsg.acc;
+
+            document.getElementById(`impactFair${scenario}`).className = "impact-change " + (impactMsg.fair.includes("-") ? "negative" : "positive");
+            document.getElementById(`impactTrans${scenario}`).className = "impact-change " + (impactMsg.trans.includes("-") ? "negative" : "positive");
+            document.getElementById(`impactAcc${scenario}`).className = "impact-change " + (impactMsg.acc.includes("-") ? "negative" : "positive");
+
+            updateScores(scenario);
+            document.querySelectorAll('.game-screen').forEach(el => el.classList.remove('active'));
+            resultScreen.classList.add('active');
+        }
+
+        function updateScores(scenario) {
+            document.getElementById(`fairness${scenario}`).textContent = scores.fairness;
+            document.getElementById(`transparency${scenario}`).textContent = scores.transparency;
+            document.getElementById(`accountability${scenario}`).textContent = scores.accountability;
+        }
+
+        function nextScenario(scenarioNum) {
+            document.querySelectorAll('.game-screen').forEach(el => el.classList.remove('active'));
+            if (scenarioNum <= 3) {
+                document.getElementById(`scenario${scenarioNum}`).classList.add('active');
+                updateScores(scenarioNum);
+            } else {
+                showFinalResult();
+            }
+        }
+
+        function showFinalResult() {
+            const totalScore = Math.round((scores.fairness + scores.transparency + scores.accountability) / 3);
+            let evaluation = "";
+
+            if (totalScore >= 80) {
+                evaluation = "🌟 축하합니다! 당신은 완벽한 AI 윤리 전문가예요!<br>당신의 모든 선택이 공정하고 투명하고 책임감 있었어요.<br>세상이 더 나아질 거예요!";
+            } else if (totalScore >= 60) {
+                evaluation = "👍 좋은 선택들이 많았어요!<br>몇 가지 개선할 점이 있지만, 당신은 이미 윤리적인 사고를 하고 있어요!<br>계속 노력하면 더 나아질 거예요!";
+            } else if (totalScore >= 40) {
+                evaluation = "🤔 고민이 필요한 상황이 있었어요!<br>당신의 일부 선택이 문제를 일으켰어요.<br>공정성, 투명성, 책임성을 더 고민해봐요!";
+            } else {
+                evaluation = "⚠️ 다시 한번 생각해봐요!<br>당신의 선택들이 윤리적이지 않았어요.<br>AI 윤리에 대해 더 배우고 다시 도전해봐요!";
+            }
+
+            document.getElementById('finalScore').textContent = totalScore + " 점";
+            document.getElementById('finalMessage').textContent = (totalScore >= 80 ? "완벽해요!" : totalScore >= 60 ? "좋아요!" : totalScore >= 40 ? "더 노력해요!" : "다시 해봐요!");
+            document.getElementById('finalEvaluation').innerHTML = evaluation;
+
+            document.getElementById('choice1Summary').textContent = choices[0].choice === 'fair' ? "✅ 채용 AI 편향 제거 - 공정성 선택!" : "❌ 채용 AI 바로 도입 - 위험한 선택!";
+            document.getElementById('choice2Summary').textContent = choices[1].choice === 'transparent' ? "✅ 의료 진단 투명하게 설명 - 신뢰 구축!" : "❌ 설명 없이 AI 판정 믿으라고 함 - 신뢰 상실!";
+            document.getElementById('choice3Summary').textContent = choices[2].choice === 'responsible' ? "✅ AI 오류 책임 인정 및 배상 - 책임감!" : "❌ 책임 회피 - 법적 문제!";
+
+            document.querySelectorAll('.game-screen').forEach(el => el.classList.remove('active'));
+            document.getElementById('finalResult').classList.add('active');
+        }
+
+        function restartGame() {
+            scores = { fairness: 50, transparency: 50, accountability: 50 };
+            choices = [];
+            document.querySelectorAll('.game-screen').forEach(el => el.classList.remove('active'));
+            document.getElementById('scenario1').classList.add('active');
+        }
+    </script>
+</body>
+</html>
