@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 윤리 3원칙 - 공정성</title>
+    <style>
+        :root {
+            --color-primary: #7C3AED;
+            --color-secondary: #EC4899;
+            --color-bg: #F3E8FF;
+            --color-text: #1F2121;
+            --color-success: #10B981;
+            --color-warning: #F59E0B;
+            --color-error: #EF4444;
+            --radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stage {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .stage.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stage-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: var(--color-secondary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .scenario-box {
+            background: #F3E8FF;
+            border-left: 4px solid var(--color-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .scenario-visual {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .comparison-card {
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #E0E0E0;
+        }
+
+        .comparison-card.unfair {
+            background: #FEE2E2;
+            border-color: var(--color-error);
+        }
+
+        .comparison-card.fair {
+            background: #DCFCE7;
+            border-color: var(--color-success);
+        }
+
+        .comparison-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .comparison-card.unfair .comparison-title {
+            color: var(--color-error);
+        }
+
+        .comparison-card.fair .comparison-title {
+            color: var(--color-success);
+        }
+
+        .comparison-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .choice-section {
+            margin-top: 30px;
+        }
+
+        .question {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 15px;
+        }
+
+        .choices {
+            display: grid;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover {
+            background: #DB2777;
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .choice-btn:active {
+            transform: translateX(2px);
+        }
+
+        .choice-icon {
+            font-size: 24px;
+        }
+
+        .feedback {
+            background: #FEF3C7;
+            border-left: 4px solid var(--color-warning);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: var(--color-warning);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .feedback-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #6D28D9;
+        }
+
+        .btn-next:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn-reset:hover {
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .progress-bar {
+            background: #E0E0E0;
+            height: 6px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            height: 100%;
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+
+        .learning-box {
+            background: #F0F9FF;
+            border-left: 4px solid var(--color-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .learning-title {
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .learning-item {
+            font-size: 14px;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .learning-item:before {
+            content: "★";
+            position: absolute;
+            left: 0;
+            color: var(--color-secondary);
+            font-weight: bold;
+        }
+
+        .emoji {
+            display: inline-block;
+            margin: 0 4px;
+        }
+
+        .fair-alert {
+            background: #DCFCE7;
+            border-left: 4px solid var(--color-success);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .fair-title {
+            color: var(--color-success);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .fair-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .unfair-alert {
+            background: #FEE2E2;
+            border-left: 4px solid var(--color-error);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .unfair-title {
+            color: var(--color-error);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .unfair-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        footer {
+            background: #F5F5F5;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .scenario-visual {
+                min-height: 120px;
+                font-size: 48px;
+            }
+
+            .choice-btn {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚖️ AI 윤리 3원칙: 공정성</h1>
+            <p>AI도 공정해야 해요! 공정성이 뭔지 배워봅시다</p>
+        </header>
+
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+
+            <!-- 1단계: 공정성 개념 -->
+            <div class="stage active" id="stage1">
+                <div class="stage-title">
+                    <span class="stage-number">1</span>
+                    <span>공정성(Fairness)이란?</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">⚖️</span> <strong>공정성</strong>은 AI가 모든 사람을 똑같이 대우해야 한다는 뜻이에요.
+                    </div>
+                    <div class="scenario-text">
+                        성별, 피부색, 나이 등 상관없이 누구에게나 동등하고 편파적이지 않아야 해요!
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    🤖 ⚖️ 👥
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">공정성이 왜 중요할까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(2)">
+                            <span class="choice-icon">📚</span>
+                            <span>다음: 공정성이 필요한 상황들</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback1">
+                    <div class="feedback-title">💡 생각해보기</div>
+                    <div class="feedback-text">
+                        학교에서 시험을 볼 때 같은 문제로, 같은 시간에 공평하게 보죠?
+                        AI도 마찬가지로 공평해야 해요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단계: 공정성 예시 -->
+            <div class="stage" id="stage2">
+                <div class="stage-title">
+                    <span class="stage-number">2</span>
+                    <span>공정성이 필요한 순간들</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        공정성이 중요한 곳들을 알아봐요!
+                    </div>
+                </div>
+
+                <div class="comparison-container">
+                    <div class="comparison-card fair">
+                        <div class="comparison-title">✓ 공정한 예시</div>
+                        <div class="comparison-content">
+                            <strong>채용 AI</strong><br>
+                            모든 지원자를 동등하게 평가. 외모나 성별 상관없이 실력으로만 판단
+                        </div>
+                    </div>
+                    <div class="comparison-card unfair">
+                        <div class="comparison-title">✗ 부당한 예시</div>
+                        <div class="comparison-content">
+                            <strong>채용 AI</strong><br>
+                            남성만 높은 점수 주기. 여성 지원자를 낮게 평가
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-container">
+                    <div class="comparison-card fair">
+                        <div class="comparison-title">✓ 공정한 예시</div>
+                        <div class="comparison-content">
+                            <strong>대출 심사 AI</strong><br>
+                            신용도와 소득만으로 평가. 모든 사람에게 같은 기준 적용
+                        </div>
+                    </div>
+                    <div class="comparison-card unfair">
+                        <div class="comparison-title">✗ 부당한 예시</div>
+                        <div class="comparison-content">
+                            <strong>대출 심사 AI</strong><br>
+                            특정 지역 사람들은 자동으로 거절. 차별
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-container">
+                    <div class="comparison-card fair">
+                        <div class="comparison-title">✓ 공정한 예시</div>
+                        <div class="comparison-content">
+                            <strong>추천 알고리즘</strong><br>
+                            모든 학생에게 같은 교육 콘텐츠 추천 기회 제공
+                        </div>
+                    </div>
+                    <div class="comparison-card unfair">
+                        <div class="comparison-title">✗ 부당한 예시</div>
+                        <div class="comparison-content">
+                            <strong>추천 알고리즘</strong><br>
+                            특정 학생들만 좋은 강의를 추천. 나머지는 무시
+                        </div>
+                    </div>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">다음으로 공정성 문제를 살펴볼까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(3)">
+                            <span class="choice-icon">🔍</span>
+                            <span>실제 사례 살펴보기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback2">
+                    <div class="feedback-title">💡 핵심</div>
+                    <div class="feedback-text">
+                        공정하다는 건 "차별 없이 누구나 같다"는 뜻이에요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3단계: 실제 사례 -->
+            <div class="stage" id="stage3">
+                <div class="stage-title">
+                    <span class="stage-number">3</span>
+                    <span>실제로 일어난 부당한 일</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        어떤 회사의 채용 AI가 발견된 문제예요:
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    👩‍💼 🤖 ❌
+                </div>
+
+                <div class="unfair-alert">
+                    <div class="unfair-title">⚠️ 실제 사건: 아마존의 차별적 채용 AI</div>
+                    <div class="unfair-text">
+                        아마존은 이력서를 자동 심사하는 AI를 만들었어요.
+                        하지만 과거 데이터에서 많은 남성이 채용되었기 때문에,
+                        AI가 남성 지원자들에게만 높은 점수를 주었어요!
+                        여성들은 자동으로 떨어지게 된 거예요. 😢
+                    </div>
+                </div>
+
+                <div class="learning-box">
+                    <div class="learning-title">🔍 왜 이런 일이 일어났을까?</div>
+                    <div class="learning-item">AI는 과거 데이터를 학습해요</div>
+                    <div class="learning-item">과거에 편향되거나 불공정한 일들이 있었다면</div>
+                    <div class="learning-item">AI도 그 패턴을 배워서 반복하게 돼요</div>
+                    <div class="learning-item">이것을 "AI 편향"이라고 불러요</div>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">이런 부당한 일을 해결하려면?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(4)">
+                            <span class="choice-icon">🛠️</span>
+                            <span>해결 방법 배우기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback3">
+                    <div class="feedback-title">💡 교훈</div>
+                    <div class="feedback-text">
+                        AI도 사람이 만든 것이기 때문에, 사람의 편견이 있으면 AI도 편견을 가져요!
+                        그래서 공정성을 확인하는 게 정말 중요해요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4단계: 해결 방법 -->
+            <div class="stage" id="stage4">
+                <div class="stage-title">
+                    <span class="stage-number">4</span>
+                    <span>공정성을 지키는 방법</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        AI의 공정성을 지키려면 어떻게 해야 할까요?
+                    </div>
+                </div>
+
+                <div class="learning-box">
+                    <div class="learning-title">✅ 공정한 AI 만드는 법</div>
+                    <div class="learning-item">1. 깨끗한 데이터 사용하기 - 편향된 과거 데이터는 제거</div>
+                    <div class="learning-item">2. 다양한 사람들 포함시키기 - 모든 그룹을 공평하게 포함</div>
+                    <div class="learning-item">3. 계속 감시하기 - AI가 공정하게 작동하는지 확인</div>
+                    <div class="learning-item">4. 투명하게 설명하기 - 왜 이런 결정을 했는지 설명</div>
+                    <div class="learning-item">5. 사람이 최종 검토하기 - AI만 믿으면 안 돼요!</div>
+                </div>
+
+                <div class="scenario-visual">
+                    👥 📊 ✓
+                </div>
+
+                <div class="fair-alert">
+                    <div class="fair-title">✨ 좋은 사례: 공정한 채용 AI</div>
+                    <div class="fair-text">
+                        어떤 회사는 여러 해의 데이터를 검토해서
+                        편향된 부분을 모두 제거한 후 AI를 만들었어요.
+                        그리고 계속해서 공정성을 확인하고 있어요!
+                    </div>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">공정성에 대해 얼마나 이해했나요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="showQuestion('fair')">
+                            <span class="choice-icon">⚖️</span>
+                            <span>이것이 공정한 AI일까?</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="answerSection" style="display: none; margin-top: 25px;">
+                    <div class="learning-box">
+                        <div class="learning-title">📌 정답</div>
+                        <div id="answerText"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-next" onclick="goToStage(5)">마지막 단계로</button>
+                        <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5단계: 마무리 -->
+            <div class="stage" id="stage5">
+                <div class="stage-title">
+                    <span class="stage-number">5</span>
+                    <span>공정성 완벽 이해하기</span>
+                </div>
+
+                <div class="learning-box">
+                    <div class="learning-title">🎯 오늘의 배움 - 공정성</div>
+                    <div class="learning-item">✅ 공정성은 AI가 모두를 같이 대우하는 것</div>
+                    <div class="learning-item">✅ 성별, 피부색, 나이 등으로 차별하면 안 돼</div>
+                    <div class="learning-item">✅ AI도 사람의 편견을 배울 수 있어</div>
+                    <div class="learning-item">✅ 깨끗한 데이터가 중요해</div>
+                    <div class="learning-item">✅ 계속 감시하고 확인해야 해</div>
+                </div>
+
+                <div style="background: #E0E7FF; padding: 20px; border-radius: 12px; margin-top: 20px; border-left: 4px solid var(--color-primary);">
+                    <div style="font-weight: 600; color: var(--color-primary); margin-bottom: 12px;">
+                        ⚖️ 공정성(Fairness)의 정의
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        <strong>공정성</strong>은 AI가 <strong>모든 사람을 평등하게 대우</strong>하는 것이에요.<br><br>
+                        • 누구도 차별받지 않아야 해요<br>
+                        • 모든 그룹에 동등한 기회를 줘야 해요<br>
+                        • 과거의 편견을 반복하면 안 돼요<br>
+                        • 지속적으로 공정성을 확인해야 해요
+                    </div>
+                </div>
+
+                <div style="background: #F3E8FF; padding: 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--color-secondary);">
+                    <div style="font-weight: 600; color: var(--color-secondary); margin-bottom: 12px;">
+                        🌍 공정한 AI 사용자가 되자!
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        우리도 AI의 공정성을 감시할 수 있어요!<br>
+                        • AI가 누군가를 차별하는 것 같으면 알리기<br>
+                        • AI 결정에 의문 가지기<br>
+                        • 편견 없이 생각하기<br>
+                        • 모두를 동등하게 존중하기 💜
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 30px;">
+                    <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            부산에듀원 2.0 | AI 윤리 교육 콘텐츠 | 공정성 학습
+        </footer>
+    </div>
+
+    <script>
+        let currentStage = 1;
+
+        function goToStage(stageNum) {
+            document.querySelectorAll('.stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+
+            document.getElementById(`stage${stageNum}`).classList.add('active');
+            
+            const progress = (stageNum / 5) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+            
+            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+            
+            currentStage = stageNum;
+        }
+
+        function showQuestion(type) {
+            const answerSection = document.getElementById('answerSection');
+            const answerText = document.getElementById('answerText');
+
+            const answers = {
+                'fair': {
+                    html: `<div class="learning-item">좋은 질문이에요! 이제 다양한 상황에서 공정성을 판단할 수 있어요!</div>
+                           <div class="learning-item">다음은 더 깊이 있게 학습할 준비가 됐어요!</div>
+                           <div class="learning-item" style="margin-top: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 6px;">
+                               <strong>공정한 AI는 모두를 행복하게 해요! 💚</strong>
+                           </div>`
+                }
+            };
+
+            answerText.innerHTML = answers[type].html;
+            answerSection.style.display = 'block';
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

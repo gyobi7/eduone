@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 윤리 3원칙 - 투명성</title>
+    <style>
+        :root {
+            --color-primary: #0EA5E9;
+            --color-secondary: #06B6D4;
+            --color-bg: #ECFDF5;
+            --color-text: #1F2121;
+            --color-success: #10B981;
+            --color-warning: #F59E0B;
+            --color-error: #EF4444;
+            --radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stage {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .stage.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stage-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-number {
+            background: var(--color-secondary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .scenario-box {
+            background: #CFFAFE;
+            border-left: 4px solid var(--color-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .scenario-visual {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .comparison-card {
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #E0E0E0;
+        }
+
+        .comparison-card.transparent {
+            background: #CCFBF1;
+            border-color: var(--color-success);
+        }
+
+        .comparison-card.opaque {
+            background: #FEE2E2;
+            border-color: var(--color-error);
+        }
+
+        .comparison-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .comparison-card.transparent .comparison-title {
+            color: var(--color-success);
+        }
+
+        .comparison-card.opaque .comparison-title {
+            color: var(--color-error);
+        }
+
+        .comparison-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .ai-box {
+            background: #F0F9FF;
+            border: 2px solid #BAE6FD;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .ai-box-title {
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .ai-step {
+            background: white;
+            border-left: 4px solid var(--color-secondary);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+        }
+
+        .ai-step-number {
+            background: var(--color-secondary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 13px;
+        }
+
+        .ai-step-text {
+            display: inline;
+            font-size: 14px;
+        }
+
+        .choice-section {
+            margin-top: 30px;
+        }
+
+        .question {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 15px;
+        }
+
+        .choices {
+            display: grid;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover {
+            background: #0891B2;
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .choice-btn:active {
+            transform: translateX(2px);
+        }
+
+        .choice-icon {
+            font-size: 24px;
+        }
+
+        .feedback {
+            background: #FEF3C7;
+            border-left: 4px solid var(--color-warning);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: var(--color-warning);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .feedback-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-next:hover {
+            background: #0284C7;
+        }
+
+        .btn-next:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn-reset:hover {
+            background: rgba(14, 165, 233, 0.1);
+        }
+
+        .progress-bar {
+            background: #E0E0E0;
+            height: 6px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            height: 100%;
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+
+        .learning-box {
+            background: #CCFBF1;
+            border-left: 4px solid var(--color-success);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .learning-title {
+            font-weight: 600;
+            color: var(--color-success);
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .learning-item {
+            font-size: 14px;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .learning-item:before {
+            content: "🔍";
+            position: absolute;
+            left: 0;
+        }
+
+        .emoji {
+            display: inline-block;
+            margin: 0 4px;
+        }
+
+        .transparent-alert {
+            background: #CCFBF1;
+            border-left: 4px solid var(--color-success);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .transparent-title {
+            color: var(--color-success);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .transparent-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .opaque-alert {
+            background: #FEE2E2;
+            border-left: 4px solid var(--color-error);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .opaque-title {
+            color: var(--color-error);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .opaque-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        footer {
+            background: #F5F5F5;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .scenario-visual {
+                min-height: 120px;
+                font-size: 48px;
+            }
+
+            .choice-btn {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 AI 윤리 3원칙: 투명성</h1>
+            <p>AI가 생각하는 과정을 알 수 있어야 해요!</p>
+        </header>
+
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+
+            <!-- 1단계: 투명성 개념 -->
+            <div class="stage active" id="stage1">
+                <div class="stage-title">
+                    <span class="stage-number">1</span>
+                    <span>투명성(Transparency)이란?</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        <span class="emoji">🔍</span> <strong>투명성</strong>은 AI가 왜 그런 결정을 했는지 설명할 수 있어야 한다는 뜻이에요.
+                    </div>
+                    <div class="scenario-text">
+                        AI의 생각 과정이 투명해야 우리가 신뢰할 수 있어요!
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    🤖 💭 → 💬
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">투명성이 왜 중요할까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(2)">
+                            <span class="choice-icon">📖</span>
+                            <span>다음: 투명성이 필요한 순간</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback1">
+                    <div class="feedback-title">💡 생각해보기</div>
+                    <div class="feedback-text">
+                        선생님이 시험 채점을 할 때 "왜 이 답이 틀렸나요?"라고 물어보면 설명해주시죠?
+                        AI도 마찬가지로 "왜 이렇게 결정했나요?"라고 물을 수 있어야 해요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단계: 투명성 예시 -->
+            <div class="stage" id="stage2">
+                <div class="stage-title">
+                    <span class="stage-number">2</span>
+                    <span>투명한 AI vs 불투명한 AI</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        어떤 AI가 투명하고 어떤 AI가 불투명한지 살펴봐요!
+                    </div>
+                </div>
+
+                <div class="comparison-container">
+                    <div class="comparison-card transparent">
+                        <div class="comparison-title">✓ 투명한 AI</div>
+                        <div class="comparison-content">
+                            <strong>신용 대출 심사</strong><br>
+                            "당신의 신용도가 700점, 소득이 적절해서 대출이 가능합니다"
+                        </div>
+                    </div>
+                    <div class="comparison-card opaque">
+                        <div class="comparison-title">✗ 불투명한 AI</div>
+                        <div class="comparison-content">
+                            <strong>신용 대출 심사</strong><br>
+                            "대출 불가입니다" (이유는 안 알려줘요)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-container">
+                    <div class="comparison-card transparent">
+                        <div class="comparison-title">✓ 투명한 AI</div>
+                        <div class="comparison-content">
+                            <strong>의료 진단</strong><br>
+                            "이 증상들을 바탕으로 폐렴일 가능성이 85%입니다"
+                        </div>
+                    </div>
+                    <div class="comparison-card opaque">
+                        <div class="comparison-title">✗ 불투명한 AI</div>
+                        <div class="comparison-content">
+                            <strong>의료 진단</strong><br>
+                            "병명: 폐렴" (왜인지 알 수 없어요)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-container">
+                    <div class="comparison-card transparent">
+                        <div class="comparison-title">✓ 투명한 AI</div>
+                        <div class="comparison-content">
+                            <strong>채용 심사</strong><br>
+                            "기술 점수 90점 + 경험 20점 = 총 110점"
+                        </div>
+                    </div>
+                    <div class="comparison-card opaque">
+                        <div class="comparison-title">✗ 불투명한 AI</div>
+                        <div class="comparison-content">
+                            <strong>채용 심사</strong><br>
+                            "합격입니다" (어떤 기준인지 모름)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">투명성 문제의 실제 사례를 볼까요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(3)">
+                            <span class="choice-icon">🔐</span>
+                            <span>실제 사례 살펴보기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback2">
+                    <div class="feedback-title">💡 핵심</div>
+                    <div class="feedback-text">
+                        투명하다는 건 "왜?"라는 질문에 답할 수 있다는 뜻이에요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3단계: 실제 사례 -->
+            <div class="stage" id="stage3">
+                <div class="stage-title">
+                    <span class="stage-number">3</span>
+                    <span>투명성 부족으로 인한 문제</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        투명성이 없어서 문제가 생긴 사례를 알아봐요:
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    🔒 🤖 ❓
+                </div>
+
+                <div class="opaque-alert">
+                    <div class="opaque-title">⚠️ 실제 사건: 얼굴 인식 AI의 실수</div>
+                    <div class="opaque-text">
+                        어떤 경찰서가 얼굴 인식 AI를 사용했는데,
+                        AI가 잘못된 사람을 범인이라고 지목했어요.
+                        하지만 AI가 왜 그렇게 결정했는지 설명할 수 없었어요! 😢
+                        그 사람은 억울하게 체포되었다가 나중에 풀려났어요.
+                    </div>
+                </div>
+
+                <div class="learning-box">
+                    <div class="learning-title">🔍 왜 투명성이 중요할까?</div>
+                    <div class="learning-item">AI가 실수해도 왜 실수했는지 알아야 고칠 수 있어</div>
+                    <div class="learning-item">사람들이 AI를 믿으려면 설명이 필요해</div>
+                    <div class="learning-item">잘못된 결정에 대해 이의를 제기할 수 있어야 해</div>
+                    <div class="learning-item">투명성 없이는 공정성도 책임성도 불가능해</div>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">투명한 AI를 만들려면 어떻게 해야 할까?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="goToStage(4)">
+                            <span class="choice-icon">🛠️</span>
+                            <span>해결 방법 배우기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback show" id="feedback3">
+                    <div class="feedback-title">💡 교훈</div>
+                    <div class="feedback-text">
+                        AI도 사람처럼 설명할 책임이 있어요!
+                        만약 설명할 수 없으면 그 결정을 신뢰하면 안 돼요!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4단계: 해결 방법 -->
+            <div class="stage" id="stage4">
+                <div class="stage-title">
+                    <span class="stage-number">4</span>
+                    <span>투명한 AI를 만드는 방법</span>
+                </div>
+
+                <div class="scenario-box">
+                    <div class="scenario-text">
+                        AI의 투명성을 확보하려면 어떻게 해야 할까요?
+                    </div>
+                </div>
+
+                <div class="ai-box">
+                    <div class="ai-box-title">✅ 투명한 AI 만드는 법</div>
+                    
+                    <div class="ai-step">
+                        <span class="ai-step-number">1</span>
+                        <span class="ai-step-text"><strong>설명 가능하게 설계하기</strong> - AI의 결정 과정을 추적할 수 있어야 해</span>
+                    </div>
+                    
+                    <div class="ai-step">
+                        <span class="ai-step-number">2</span>
+                        <span class="ai-step-text"><strong>기록 남기기</strong> - AI가 어떤 데이터를 봤고 어떻게 결정했는지 기록</span>
+                    </div>
+                    
+                    <div class="ai-step">
+                        <span class="ai-step-number">3</span>
+                        <span class="ai-step-text"><strong>사람이 검토하기</strong> - AI 결정에 사람이 확인해야 해</span>
+                    </div>
+                    
+                    <div class="ai-step">
+                        <span class="ai-step-number">4</span>
+                        <span class="ai-step-text"><strong>사용자에게 설명하기</strong> - "왜 이렇게 결정했나요?"에 답할 수 있어야 해</span>
+                    </div>
+                    
+                    <div class="ai-step">
+                        <span class="ai-step-number">5</span>
+                        <span class="ai-step-text"><strong>이의 제기 시스템 만들기</strong> - 잘못된 결정에 항의할 수 있어야 해</span>
+                    </div>
+                </div>
+
+                <div class="scenario-visual">
+                    👥 🔍 ✓
+                </div>
+
+                <div class="transparent-alert">
+                    <div class="transparent-title">✨ 좋은 사례: 투명한 의료 AI</div>
+                    <div class="transparent-text">
+                        어떤 병원의 AI는 의사에게 이렇게 설명해요:
+                        "이 증상, 나이, 과거 병력 정보를 바탕으로 진단을 내렸습니다"
+                        의사가 충분히 이해하고 최종 결정을 내려요!
+                    </div>
+                </div>
+
+                <div class="choice-section">
+                    <div class="question">투명성을 이해했나요?</div>
+                    <div class="choices">
+                        <button class="choice-btn" onclick="showQuestion('transparent')">
+                            <span class="choice-icon">🔍</span>
+                            <span>투명한 결정은?</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="answerSection" style="display: none; margin-top: 25px;">
+                    <div class="learning-box">
+                        <div class="learning-title">📌 정답</div>
+                        <div id="answerText"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-next" onclick="goToStage(5)">마지막 단계로</button>
+                        <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5단계: 마무리 -->
+            <div class="stage" id="stage5">
+                <div class="stage-title">
+                    <span class="stage-number">5</span>
+                    <span>투명성 완벽 이해하기</span>
+                </div>
+
+                <div class="learning-box">
+                    <div class="learning-title">🎯 오늘의 배움 - 투명성</div>
+                    <div class="learning-item">✅ 투명성은 AI가 결정 이유를 설명할 수 있다는 뜻</div>
+                    <div class="learning-item">✅ "왜?"라는 질문에 답할 수 있어야 해</div>
+                    <div class="learning-item">✅ AI도 설명책임이 있어</div>
+                    <div class="learning-item">✅ 투명하지 않으면 신뢰할 수 없어</div>
+                    <div class="learning-item">✅ 사람의 검토가 필수예요</div>
+                </div>
+
+                <div style="background: #CFFAFE; padding: 20px; border-radius: 12px; margin-top: 20px; border-left: 4px solid var(--color-primary);">
+                    <div style="font-weight: 600; color: var(--color-primary); margin-bottom: 12px;">
+                        🔍 투명성(Transparency)의 정의
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        <strong>투명성</strong>은 AI가 <strong>왜 그런 결정을 했는지 설명할 수 있다</strong>는 뜻이에요.<br><br>
+                        • AI의 생각 과정을 이해할 수 있어야 해<br>
+                        • 사용된 데이터와 기준을 알 수 있어야 해<br>
+                        • 실수가 있을 때 찾아낼 수 있어야 해<br>
+                        • 결정에 이의를 제기할 수 있어야 해
+                    </div>
+                </div>
+
+                <div style="background: #CCFBF1; padding: 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid var(--color-success);">
+                    <div style="font-weight: 600; color: var(--color-success); margin-bottom: 12px;">
+                        🔎 투명한 AI 사용자가 되자!
+                    </div>
+                    <div style="font-size: 15px; line-height: 1.7;">
+                        AI 결정에 대해 물어봐도 괜찮아요!<br>
+                        • "왜 이렇게 결정했나요?" 물어보기<br>
+                        • 설명 없는 AI는 의심하기<br>
+                        • 결정에 동의하지 않으면 이의 제기하기<br>
+                        • 투명한 AI 회사를 지지하기 💙
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 30px;">
+                    <button class="btn btn-reset" onclick="goToStage(1)">처음부터 다시</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            부산에듀원 2.0 | AI 윤리 교육 콘텐츠 | 투명성 학습
+        </footer>
+    </div>
+
+    <script>
+        let currentStage = 1;
+
+        function goToStage(stageNum) {
+            document.querySelectorAll('.stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+
+            document.getElementById(`stage${stageNum}`).classList.add('active');
+            
+            const progress = (stageNum / 5) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+            
+            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+            
+            currentStage = stageNum;
+        }
+
+        function showQuestion(type) {
+            const answerSection = document.getElementById('answerSection');
+            const answerText = document.getElementById('answerText');
+
+            const answers = {
+                'transparent': {
+                    html: `<div class="learning-item">완벽해요! 투명성을 정말 잘 이해했어요!</div>
+                           <div class="learning-item">이제 투명한 AI를 판단할 수 있는 능력이 생겼어요!</div>
+                           <div class="learning-item" style="margin-top: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 6px;">
+                               <strong>투명한 AI가 신뢰를 만들어요! 🔍</strong>
+                           </div>`
+                }
+            };
+
+            answerText.innerHTML = answers[type].html;
+            answerSection.style.display = 'block';
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
